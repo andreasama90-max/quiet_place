@@ -241,4 +241,22 @@
       document.getElementById("loginBtn").textContent = t.loginBtn;
       document.getElementById("changePasswordBtn").textContent = t.changePass;
       document.getElementById("modalTitle").textContent = t.modalTitle;
-      doc
+      document.getElementById("oldPassLabel").textContent = t.oldPass;
+      document.getElementById("newPassLabel").textContent = t.newPass;
+      document.getElementById("confirmPassLabel").textContent = t.confirmPass;
+      document.getElementById("savePassword").textContent = t.save;
+      localStorage.setItem("lang", lang);
+      switchButtons.forEach(btn => btn.classList.remove("active"));
+      document.querySelector(`[data-lang="${lang}"]`).classList.add("active");
+    }
+
+    switchButtons.forEach(btn => {
+      btn.addEventListener("click", () => setLanguage(btn.dataset.lang));
+    });
+
+    const savedLang = localStorage.getItem("lang") || "sk";
+    setLanguage(savedLang);
+  </script>
+</body>
+</html>
+
