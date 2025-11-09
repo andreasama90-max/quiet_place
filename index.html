@@ -1,266 +1,238 @@
-<!DOCTYPE html>
-<html lang="sk">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tiché Miesto – Prihlásenie</title>
-  <style>
-    body {
-      font-family: "Nunito Sans", sans-serif;
-      background: linear-gradient(180deg, #E8F4FB, #FDFDFD);
-      color: #333;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-      transition: background 0.5s ease;
-    }
+<script>
+/* ========= TRANSLATIONS & UI TEXTS ========= */
+const translations = {
+  sk: {
+    title: "🌸 Tiché Miesto",
+    subtitle: "Priestor, kde môžeš byť sám sebou – bezpečne a v pokoji 🌿",
+    nickname: "Prezývka",
+    password: "Heslo (4–16 symbolov)",
+    loginBtn: "Prihlásiť sa",
+    changePass: "🔑 Zmeniť heslo",
+    modalTitle: "Zmeniť heslo",
+    oldPass: "Staré heslo:",
+    newPass: "Nové heslo:",
+    confirmPass: "Potvrď nové heslo:",
+    save: "Uložiť nové heslo",
+    fillFields: "Prosím, vyplň všetky polia 🌸",
+    passLength: "Heslo musí mať 4 až 16 znakov 🔒",
+    wrongPass: "Nesprávne heslo — skús to znova 💗",
+    welcomeNew: "Vitaj, {name} — účet vytvorený. Presmerovávam ťa do komunity 🌸",
+    welcomeBack: "Vitaj späť, {name} — presmerovávam ťa... 🌿",
+    guardianWrong: "Nesprávne heslo pre Strážcu / Pomocníka 🔒",
+    guardianWelcome: "Vitaj, {name} — presmerovávam ťa do správy... 🌸",
+    changePassNoUser: "Najprv sa prihlás 🌿",
+    changePassWrongOld: "Staré heslo nie je správne ❌",
+    changePassShort: "Nové heslo musí mať aspoň 4 znaky 🔒",
+    changePassMismatch: "Heslá sa nezhodujú ⚠️",
+    changePassSuccess: "Heslo bolo úspešne zmenené 🌿"
+  },
+  en: {
+    title: "🌸 Quiet Place",
+    subtitle: "A space where you can be yourself – safe and calm 🌿",
+    nickname: "Nickname",
+    password: "Password (4–16 symbols)",
+    loginBtn: "Log In",
+    changePass: "🔑 Change Password",
+    modalTitle: "Change Password",
+    oldPass: "Old Password:",
+    newPass: "New Password:",
+    confirmPass: "Confirm Password:",
+    save: "Save New Password",
+    fillFields: "Please, fill all fields 🌸",
+    passLength: "Password must be 4 to 16 characters 🔒",
+    wrongPass: "Wrong password — try again 💗",
+    welcomeNew: "Welcome, {name} — account created. Redirecting to community 🌸",
+    welcomeBack: "Welcome back, {name} — redirecting... 🌿",
+    guardianWrong: "Wrong guardian/helper password 🔒",
+    guardianWelcome: "Welcome, {name} — redirecting to dashboard... 🌸",
+    changePassNoUser: "Please log in first 🌿",
+    changePassWrongOld: "Old password is incorrect ❌",
+    changePassShort: "New password must be at least 4 characters 🔒",
+    changePassMismatch: "Passwords do not match ⚠️",
+    changePassSuccess: "Password changed successfully 🌿"
+  },
+  cz: {
+    title: "🌸 Tiché Místo",
+    subtitle: "Prostor, kde můžeš být sám sebou – v bezpečí a klidu 🌿",
+    nickname: "Přezdívka",
+    password: "Heslo (4–16 symbolů)",
+    loginBtn: "Přihlásit se",
+    changePass: "🔑 Změnit heslo",
+    modalTitle: "Změnit heslo",
+    oldPass: "Staré heslo:",
+    newPass: "Nové heslo:",
+    confirmPass: "Potvrď nové heslo:",
+    save: "Uložit nové heslo",
+    fillFields: "Prosím, vyplň všechny pole 🌸",
+    passLength: "Heslo musí mít 4 až 16 znaků 🔒",
+    wrongPass: "Nesprávné heslo — zkus to znovu 💗",
+    welcomeNew: "Vítej, {name} — účet vytvořen. Přesměrovávám do komunity 🌸",
+    welcomeBack: "Vítej zpět, {name} — přesměrovávám... 🌿",
+    guardianWrong: "Nesprávné heslo pro Strážce / Pomocníka 🔒",
+    guardianWelcome: "Vítej, {name} — přesměrovávám do správy... 🌸",
+    changePassNoUser: "Nejprve se prosím přihlas 🌿",
+    changePassWrongOld: "Staré heslo není správné ❌",
+    changePassShort: "Nové heslo musí mít alespoň 4 znaky 🔒",
+    changePassMismatch: "Hesla se neshodují ⚠️",
+    changePassSuccess: "Heslo bylo úspěšně změněno 🌿"
+  }
+};
 
-    h1 {
-      color: #4b8370;
-      font-size: 2rem;
-      margin-bottom: 10px;
-    }
+/* ========= UI ELEMENTS ========= */
+const switchButtons = document.querySelectorAll(".language-switch button");
+const titleEl = document.getElementById("title");
+const subtitleEl = document.getElementById("subtitle");
+const nicknameInput = document.getElementById("nickname");
+const passwordInput = document.getElementById("password");
+const loginBtn = document.getElementById("loginBtn");
+const changePasswordBtn = document.getElementById("changePasswordBtn");
+const messageEl = document.getElementById("message");
 
-    p {
-      color: #666;
-      font-size: 1rem;
-      margin-bottom: 20px;
-    }
+/* ========= GUARDIANS ========= */
+const GUARDIANS = ["Strážca", "Pomocník", "Pomocník 2", "Pomocník 3"];
+const GUARDIAN_PASSWORD = "spravedlnosť";
 
-    .login-box {
-      background: #ffffff;
-      border-radius: 15px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      padding: 30px;
-      width: 90%;
-      max-width: 400px;
-      text-align: center;
-    }
-
-   input {
-  width: 90%;
-  padding: 10px;
-  margin: 10px 0;
-  border-radius: 10px;
-  border: 1px solid #bcd5ca;
-  font-size: 1rem;
-  font-family: "Nunito Sans", sans-serif;
-  color: #333;
+/* ========= Helpers for users storage ========= */
+function loadUsers() {
+  try { return JSON.parse(localStorage.getItem("users") || "{}"); }
+  catch { return {}; }
 }
+function saveUsers(obj) { localStorage.setItem("users", JSON.stringify(obj)); }
 
+/* ========= LANGUAGE ========== */
+function applyTranslations(lang) {
+  const t = translations[lang];
+  titleEl.textContent = t.title;
+  subtitleEl.textContent = t.subtitle;
+  nicknameInput.placeholder = t.nickname;
+  passwordInput.placeholder = t.password;
+  loginBtn.textContent = t.loginBtn;
+  changePasswordBtn.textContent = t.changePass;
+  document.getElementById("modalTitle").textContent = t.modalTitle;
+  document.getElementById("oldPassLabel").textContent = t.oldPass;
+  document.getElementById("newPassLabel").textContent = t.newPass;
+  document.getElementById("confirmPassLabel").textContent = t.confirmPass;
+  document.getElementById("savePassword").textContent = t.save;
 
-    button {
-      background: #8bc8ae;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      padding: 10px 25px;
-      cursor: pointer;
-      font-size: 1rem;
-      transition: background 0.3s ease;
+  // active class on buttons
+  switchButtons.forEach(b => b.classList.remove("active"));
+  const btn = document.querySelector(`[data-lang="${lang}"]`);
+  if (btn) btn.classList.add("active");
+  localStorage.setItem("lang", lang);
+}
+switchButtons.forEach(btn => btn.addEventListener("click", () => applyTranslations(btn.dataset.lang)));
+const savedLang = localStorage.getItem("lang") || "sk";
+applyTranslations(savedLang);
+
+/* ========= LOGIN / REGISTER LOGIC ========= */
+loginBtn.addEventListener("click", () => {
+  const name = nicknameInput.value.trim();
+  const pass = passwordInput.value;
+
+  const t = translations[localStorage.getItem("lang") || savedLang];
+
+  if (!name || !pass) {
+    messageEl.style.color = "#cf6b85";
+    messageEl.textContent = t.fillFields;
+    return;
+  }
+  if (pass.length < 4 || pass.length > 16) {
+    messageEl.style.color = "#cf6b85";
+    messageEl.textContent = t.passLength;
+    return;
+  }
+
+  // guardians
+  if (GUARDIANS.includes(name)) {
+    if (pass !== GUARDIAN_PASSWORD) {
+      messageEl.style.color = "#cf6b85";
+      messageEl.textContent = t.guardianWrong;
+      return;
     }
+    localStorage.setItem("currentUser", name);
+    localStorage.setItem("nickname", name);
+    messageEl.style.color = "#4b8370";
+    messageEl.textContent = t.guardianWelcome.replace("{name}", name);
+    setTimeout(() => window.location.href = "guardian_dashboard.html", 900);
+    return;
+  }
 
-    button:hover {
-      background: #77b69c;
+  // normal users
+  const users = loadUsers();
+  if (users.hasOwnProperty(name)) {
+    if (users[name] !== pass) {
+      messageEl.style.color = "#cf6b85";
+      messageEl.textContent = t.wrongPass;
+      return;
     }
+    localStorage.setItem("currentUser", name);
+    localStorage.setItem("nickname", name);
+    messageEl.style.color = "#4b8370";
+    messageEl.textContent = t.welcomeBack.replace("{name}", name);
+    setTimeout(() => window.location.href = "community.html", 700);
+    return;
+  }
 
-    .secondary-btn {
-      background: #f7fff9;
-      color: #3e6e5d;
-      border: 1px solid #b9e0ca;
-      border-radius: 20px;
-      padding: 8px 16px;
-      cursor: pointer;
-      transition: all 0.25s ease;
-    }
+  // register new
+  users[name] = pass;
+  saveUsers(users);
+  localStorage.setItem("currentUser", name);
+  localStorage.setItem("nickname", name);
+  messageEl.style.color = "#4b8370";
+  messageEl.textContent = t.welcomeNew.replace("{name}", name);
+  setTimeout(() => window.location.href = "community.html", 900);
+});
 
-    .secondary-btn:hover {
-      background: #e1f4ea;
-    }
+/* ========= AUTO-REDIRECT IF ALREADY LOGGED ========= */
+(function autoRedirectIfLogged(){
+  const cur = localStorage.getItem("currentUser");
+  if (!cur) return;
+  if (GUARDIANS.includes(cur)) setTimeout(()=>window.location.href="guardian_dashboard.html", 300);
+  else setTimeout(()=>window.location.href="community.html", 300);
+})();
 
-    .message {
-      margin-top: 15px;
-      font-weight: 600;
-    }
+/* ========= PASSWORD MODAL (open/close/save) ========= */
+const modal = document.getElementById("passwordModal");
+const closeModal = document.getElementById("closeModal");
+const savePasswordBtn = document.getElementById("savePassword");
 
-    /* jazykový prepínač */
-    .language-switch {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      display: flex;
-      gap: 8px;
-    }
+changePasswordBtn.addEventListener("click", () => {
+  modal.style.display = "block";
+});
+closeModal.addEventListener("click", () => modal.style.display = "none");
+window.addEventListener("click", (e) => { if (e.target === modal) modal.style.display = "none"; });
 
-    .language-switch button {
-      background: #f1f9f6;
-      color: #4b8370;
-      border: 1px solid #bcd5ca;
-      padding: 4px 8px;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      cursor: pointer;
-    }
+savePasswordBtn.addEventListener("click", () => {
+  const oldPass = document.getElementById("oldPassword").value.trim();
+  const newPass = document.getElementById("newPassword").value.trim();
+  const confirmPass = document.getElementById("confirmPassword").value.trim();
+  const cur = localStorage.getItem("currentUser");
+  const t = translations[localStorage.getItem("lang") || savedLang];
 
-    .language-switch button.active {
-      background: #8bc8ae;
-      color: white;
-      font-weight: bold;
-    }
+  if (!cur) { alert(t.changePassNoUser); return; }
 
-    /* Modal */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 20;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.3);
-    }
+  const users = loadUsers();
+  if (!users[cur] || users[cur] !== oldPass) { alert(t.changePassWrongOld); return; }
+  if (newPass.length < 4) { alert(t.changePassShort); return; }
+  if (newPass !== confirmPass) { alert(t.changePassMismatch); return; }
 
-    .modal-content {
-      background: white;
-      margin: 10% auto;
-      padding: 20px 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      max-width: 400px;
-      text-align: left;
-    }
+  users[cur] = newPass;
+  saveUsers(users);
+  alert(t.changePassSuccess);
+  modal.style.display = "none";
+  document.getElementById("oldPassword").value = "";
+  document.getElementById("newPassword").value = "";
+  document.getElementById("confirmPassword").value = "";
+});
 
-    .modal-content h3 {
-      text-align: center;
-      color: #3e6e5d;
-      margin-bottom: 15px;
-    }
+/* ========= Optional: press Enter to login ========= */
+[nicknameInput, passwordInput].forEach(el => {
+  el.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") loginBtn.click();
+  });
+});
+</script>
 
-    .modal-content input {
-      width: 100%;
-      padding: 8px 10px;
-      margin-bottom: 12px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-family: inherit;
-    }
 
-    .close {
-      float: right;
-      font-size: 1.5rem;
-      cursor: pointer;
-      color: #888;
-    }
-
-    .close:hover {
-      color: #000;
-    }
-  </style>
-</head>
-<body>
-  <!-- prepínač jazykov -->
-  <div class="language-switch">
-    <button data-lang="sk" class="active">🇸🇰 SK</button>
-    <button data-lang="en">🇬🇧 EN</button>
-    <button data-lang="cz">🇨🇿 CZ</button>
-  </div>
-
-  <h1 id="title">🌸 Tiché Miesto</h1>
-  <p id="subtitle">Priestor, kde môžeš byť sám sebou – bezpečne a v pokoji 🌿</p>
-
-  <div class="login-box">
-    <input type="text" id="nickname" placeholder="Prezývka" maxlength="16" />
-    <input type="password" id="password" placeholder="Heslo (4–16 symbolov)" maxlength="16" />
-    <button id="loginBtn">Prihlásiť sa</button>
-    <div class="message" id="message"></div>
-  </div>
-
-  <div style="text-align:center; margin-top:10px;">
-    <button class="secondary-btn" id="changePasswordBtn">🔑 Zmeniť heslo</button>
-  </div>
-
-  <div id="passwordModal" class="modal">
-    <div class="modal-content">
-      <span class="close" id="closeModal">&times;</span>
-      <h3 id="modalTitle">Zmeniť heslo</h3>
-      <label id="oldPassLabel">Staré heslo:</label>
-      <input type="password" id="oldPassword" placeholder="Zadaj staré heslo">
-      <label id="newPassLabel">Nové heslo:</label>
-      <input type="password" id="newPassword" placeholder="Zadaj nové heslo">
-      <label id="confirmPassLabel">Potvrď nové heslo:</label>
-      <input type="password" id="confirmPassword" placeholder="Zopakuj nové heslo">
-      <button class="post-btn" id="savePassword">Uložiť nové heslo</button>
-    </div>
-  </div>
-
-  <script>
-    // === PREKLADY ===
-    const translations = {
-      sk: {
-        title: "🌸 Tiché Miesto",
-        subtitle: "Priestor, kde môžeš byť sám sebou – bezpečne a v pokoji 🌿",
-        loginBtn: "Prihlásiť sa",
-        changePass: "🔑 Zmeniť heslo",
-        modalTitle: "Zmeniť heslo",
-        oldPass: "Staré heslo:",
-        newPass: "Nové heslo:",
-        confirmPass: "Potvrď nové heslo:",
-        save: "Uložiť nové heslo"
-      },
-      en: {
-        title: "🌸 Quiet Place",
-        subtitle: "A space where you can be yourself – safe and calm 🌿",
-        loginBtn: "Log In",
-        changePass: "🔑 Change Password",
-        modalTitle: "Change Password",
-        oldPass: "Old Password:",
-        newPass: "New Password:",
-        confirmPass: "Confirm Password:",
-        save: "Save New Password"
-      },
-      cz: {
-        title: "🌸 Tiché Místo",
-        subtitle: "Prostor, kde můžeš být sám sebou – v bezpečí a klidu 🌿",
-        loginBtn: "Přihlásit se",
-        changePass: "🔑 Změnit heslo",
-        modalTitle: "Změnit heslo",
-        oldPass: "Staré heslo:",
-        newPass: "Nové heslo:",
-        confirmPass: "Potvrď nové heslo:",
-        save: "Uložit nové heslo"
-      }
-    };
-
-    // === FUNKCIA NA ZMENU JAZYKA ===
-    const switchButtons = document.querySelectorAll(".language-switch button");
-
-    function setLanguage(lang) {
-      const t = translations[lang];
-      document.getElementById("title").textContent = t.title;
-      document.getElementById("subtitle").textContent = t.subtitle;
-      document.getElementById("loginBtn").textContent = t.loginBtn;
-      document.getElementById("changePasswordBtn").textContent = t.changePass;
-      document.getElementById("modalTitle").textContent = t.modalTitle;
-      document.getElementById("oldPassLabel").textContent = t.oldPass;
-      document.getElementById("newPassLabel").textContent = t.newPass;
-      document.getElementById("confirmPassLabel").textContent = t.confirmPass;
-      document.getElementById("savePassword").textContent = t.save;
-      localStorage.setItem("lang", lang);
-      switchButtons.forEach(btn => btn.classList.remove("active"));
-      document.querySelector(`[data-lang="${lang}"]`).classList.add("active");
-    }
-
-    switchButtons.forEach(btn => {
-      btn.addEventListener("click", () => setLanguage(btn.dataset.lang));
-    });
-
-    const savedLang = localStorage.getItem("lang") || "sk";
-    setLanguage(savedLang);
-  </script>
-</body>
-</html>
 
 
