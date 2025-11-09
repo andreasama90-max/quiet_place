@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="sk">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tiché Miesto – Prihlásenie</title>
   <style>
     body {
@@ -83,16 +83,32 @@
       font-weight: 600;
     }
 
-    #toggleMusic {
-      background: #eaf7f3;
-      color: #4b8370;
-      margin-top: 15px;
-      font-size: 0.9rem;
-      border-radius: 8px;
-      padding: 8px 15px;
+    /* jazykový prepínač */
+    .language-switch {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 8px;
     }
 
-    /* === Modal === */
+    .language-switch button {
+      background: #f1f9f6;
+      color: #4b8370;
+      border: 1px solid #bcd5ca;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .language-switch button.active {
+      background: #8bc8ae;
+      color: white;
+      font-weight: bold;
+    }
+
+    /* Modal */
     .modal {
       display: none;
       position: fixed;
@@ -142,8 +158,15 @@
   </style>
 </head>
 <body>
-  <h1>🌸 Tiché Miesto</h1>
-  <p>Priestor, kde môžeš byť sám sebou – bezpečne a v pokoji 🌿</p>
+  <!-- prepínač jazykov -->
+  <div class="language-switch">
+    <button data-lang="sk" class="active">🇸🇰 SK</button>
+    <button data-lang="en">🇬🇧 EN</button>
+    <button data-lang="cz">🇨🇿 CZ</button>
+  </div>
+
+  <h1 id="title">🌸 Tiché Miesto</h1>
+  <p id="subtitle">Priestor, kde môžeš byť sám sebou – bezpečne a v pokoji 🌿</p>
 
   <div class="login-box">
     <input type="text" id="nickname" placeholder="Prezývka" maxlength="16" />
@@ -152,161 +175,70 @@
     <div class="message" id="message"></div>
   </div>
 
-  <!-- Tlačidlo na otvorenie modalu -->
   <div style="text-align:center; margin-top:10px;">
     <button class="secondary-btn" id="changePasswordBtn">🔑 Zmeniť heslo</button>
   </div>
 
-  <!-- MODAL okno -->
   <div id="passwordModal" class="modal">
     <div class="modal-content">
       <span class="close" id="closeModal">&times;</span>
-      <h3>Zmeniť heslo</h3>
-      <label>Staré heslo:</label>
+      <h3 id="modalTitle">Zmeniť heslo</h3>
+      <label id="oldPassLabel">Staré heslo:</label>
       <input type="password" id="oldPassword" placeholder="Zadaj staré heslo">
-
-      <label>Nové heslo:</label>
+      <label id="newPassLabel">Nové heslo:</label>
       <input type="password" id="newPassword" placeholder="Zadaj nové heslo">
-
-      <label>Potvrď nové heslo:</label>
+      <label id="confirmPassLabel">Potvrď nové heslo:</label>
       <input type="password" id="confirmPassword" placeholder="Zopakuj nové heslo">
-
       <button class="post-btn" id="savePassword">Uložiť nové heslo</button>
     </div>
   </div>
 
   <script>
-    const loginBtn = document.getElementById("loginBtn");
-    const nicknameInput = document.getElementById("nickname");
-    const passwordInput = document.getElementById("password");
-    const message = document.getElementById("message");
-    const body = document.body;
-    const music = document.getElementById("calmMusic");
-    const toggleBtn = document.getElementById("toggleMusic");
-    let playing = false;
-
-    const GUARDIANS = ["Strážca", "Pomocník", "Pomocník 2", "Pomocník 3"];
-    const GUARDIAN_PASSWORD = "spravedlnosť";
-
-    function loadUsers() {
-      try {
-        return JSON.parse(localStorage.getItem("users") || "{}");
-      } catch {
-        return {};
+    // === PREKLADY ===
+    const translations = {
+      sk: {
+        title: "🌸 Tiché Miesto",
+        subtitle: "Priestor, kde môžeš byť sám sebou – bezpečne a v pokoji 🌿",
+        loginBtn: "Prihlásiť sa",
+        changePass: "🔑 Zmeniť heslo",
+        modalTitle: "Zmeniť heslo",
+        oldPass: "Staré heslo:",
+        newPass: "Nové heslo:",
+        confirmPass: "Potvrď nové heslo:",
+        save: "Uložiť nové heslo"
+      },
+      en: {
+        title: "🌸 Quiet Place",
+        subtitle: "A space where you can be yourself – safe and calm 🌿",
+        loginBtn: "Log In",
+        changePass: "🔑 Change Password",
+        modalTitle: "Change Password",
+        oldPass: "Old Password:",
+        newPass: "New Password:",
+        confirmPass: "Confirm Password:",
+        save: "Save New Password"
+      },
+      cz: {
+        title: "🌸 Tiché Místo",
+        subtitle: "Prostor, kde můžeš být sám sebou – v bezpečí a klidu 🌿",
+        loginBtn: "Přihlásit se",
+        changePass: "🔑 Změnit heslo",
+        modalTitle: "Změnit heslo",
+        oldPass: "Staré heslo:",
+        newPass: "Nové heslo:",
+        confirmPass: "Potvrď nové heslo:",
+        save: "Uložit nové heslo"
       }
-    }
-
-    function saveUsers(users) {
-      localStorage.setItem("users", JSON.stringify(users));
-    }
-
-    loginBtn.onclick = () => {
-      const name = nicknameInput.value.trim();
-      const pass = passwordInput.value;
-
-      if (!name || !pass) {
-        message.style.color = "#cf6b85";
-        message.textContent = "Prosím, vyplň všetky polia 🌸";
-        return;
-      }
-      if (pass.length < 4 || pass.length > 16) {
-        message.style.color = "#cf6b85";
-        message.textContent = "Heslo musí mať 4 až 16 znakov 🔒";
-        return;
-      }
-
-      if (GUARDIANS.includes(name)) {
-        if (pass !== GUARDIAN_PASSWORD) {
-          message.style.color = "#cf6b85";
-          message.textContent = "Nesprávne heslo pre Strážcu / Pomocníka 🔒";
-          return;
-        }
-        localStorage.setItem("currentUser", name);
-        localStorage.setItem("nickname", name);
-        message.style.color = "#4b8370";
-        message.textContent = `Vitaj, ${name} — presmerovávam ťa do správy... 🌸`;
-        setTimeout(() => window.location.href = "guardian_dashboard.html", 900);
-        return;
-      }
-
-      const users = loadUsers();
-      if (users.hasOwnProperty(name)) {
-        if (users[name] !== pass) {
-          message.style.color = "#cf6b85";
-          message.textContent = "Nesprávne heslo — skús to znova 💗";
-          return;
-        }
-        localStorage.setItem("currentUser", name);
-        localStorage.setItem("nickname", name);
-        message.style.color = "#4b8370";
-        message.textContent = `Vitaj späť, ${name} — presmerovávam ťa... 🌿`;
-        setTimeout(() => window.location.href = "community.html", 700);
-        return;
-      }
-
-      users[name] = pass;
-      saveUsers(users);
-      localStorage.setItem("currentUser", name);
-      localStorage.setItem("nickname", name);
-      message.style.color = "#4b8370";
-      message.textContent = `Vitaj, ${name} — účet vytvorený. Presmerovávam ťa do komunity 🌸`;
-      setTimeout(() => window.location.href = "community.html", 900);
     };
 
-    (function autoRedirectIfLogged() {
-      const cur = localStorage.getItem("currentUser");
-      if (cur) {
-        if (GUARDIANS.includes(cur)) {
-          setTimeout(() => window.location.href = "guardian_dashboard.html", 300);
-        } else {
-          setTimeout(() => window.location.href = "community.html", 300);
-        }
-      }
-    })();
+    // === FUNKCIA NA ZMENU JAZYKA ===
+    const switchButtons = document.querySelectorAll(".language-switch button");
 
-    // === MODAL ===
-    const modal = document.getElementById("passwordModal");
-    document.getElementById("changePasswordBtn").onclick = () => modal.style.display = "block";
-    document.getElementById("closeModal").onclick = () => modal.style.display = "none";
-    window.onclick = (e) => { if (e.target === modal) modal.style.display = "none"; };
-
-    document.getElementById("savePassword").onclick = () => {
-      const oldPass = document.getElementById("oldPassword").value.trim();
-      const newPass = document.getElementById("newPassword").value.trim();
-      const confirmPass = document.getElementById("confirmPassword").value.trim();
-
-      const currentUser = localStorage.getItem("currentUser");
-      if (!currentUser) {
-        alert("Najprv sa prihlás 🌿");
-        return;
-      }
-
-      const users = JSON.parse(localStorage.getItem("users") || "{}");
-      if (!users[currentUser] || users[currentUser] !== oldPass) {
-        alert("Staré heslo nie je správne ❌");
-        return;
-      }
-
-      if (newPass.length < 4) {
-        alert("Nové heslo musí mať aspoň 4 znaky 🔒");
-        return;
-      }
-
-      if (newPass !== confirmPass) {
-        alert("Heslá sa nezhodujú ⚠️");
-        return;
-      }
-
-      users[currentUser] = newPass;
-      localStorage.setItem("users", JSON.stringify(users));
-      alert("Heslo bolo úspešne zmenené 🌿");
-      modal.style.display = "none";
-
-      document.getElementById("oldPassword").value = "";
-      document.getElementById("newPassword").value = "";
-      document.getElementById("confirmPassword").value = "";
-    };
-  </script>
-</body>
-</html>
-
+    function setLanguage(lang) {
+      const t = translations[lang];
+      document.getElementById("title").textContent = t.title;
+      document.getElementById("subtitle").textContent = t.subtitle;
+      document.getElementById("loginBtn").textContent = t.loginBtn;
+      document.getElementById("changePasswordBtn").textContent = t.changePass;
+      document.getElementById("modalTitle").textContent = t.modalTitle;
+      doc
