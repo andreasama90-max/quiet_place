@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tiché Miesto – Prihlásenie</title>
+  <style>
+    body {
+      font-family: "Nunito Sans", sans-serif;
+      background: linear-gradient(180deg, #E8F4FB, #FDFDFD);
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      transition: background 0.5s ease;
+    }
+
+    h1 {
+      color: #4b8370;
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #666;
+      font-size: 1rem;
+      margin-bottom: 20px;
+    }
+
+    .login-box {
+      background: #ffffff;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 10px;
+      border: 1px solid #bcd5ca;
+      font-size: 1rem;
+    }
+
+    button {
+      background: #8bc8ae;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 25px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #77b69c;
+    }
+
+    .secondary-btn {
+      background: #f7fff9;
+      color: #3e6e5d;
+      border: 1px solid #b9e0ca;
+      border-radius: 20px;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .secondary-btn:hover {
+      background: #e1f4ea;
+    }
+
+    .message {
+      margin-top: 15px;
+      font-weight: 600;
+    }
+
+    #toggleMusic {
+      background: #eaf7f3;
+      color: #4b8370;
+      margin-top: 15px;
+      font-size: 0.9rem;
+      border-radius: 8px;
+      padding: 8px 15px;
+    }
+
+    /* === Modal === */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 20;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-content {
+      background: white;
+      margin: 10% auto;
+      padding: 20px 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      max-width: 400px;
+      text-align: left;
+    }
+
+    .modal-content h3 {
+      text-align: center;
+      color: #3e6e5d;
+      margin-bottom: 15px;
+    }
+
+    .modal-content input {
+      width: 100%;
+      padding: 8px 10px;
+      margin-bottom: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-family: inherit;
+    }
+
+    .close {
+      float: right;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #888;
+    }
+
+    .close:hover {
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+  <h1>🌸 Tiché Miesto</h1>
+  <p>Priestor, kde môžeš byť sám sebou – bezpečne a v pokoji 🌿</p>
+
+  <div class="login-box">
+    <input type="text" id="nickname" placeholder="Prezývka" maxlength="16" />
+    <input type="password" id="password" placeholder="Heslo (4–16 symbolov)" maxlength="16" />
+    <button id="loginBtn">Prihlásiť sa</button>
+    <div class="message" id="message"></div>
+  </div>
+
+  <!-- Tlačidlo na otvorenie modalu -->
+  <div style="text-align:center; margin-top:10px;">
+    <button class="secondary-btn" id="changePasswordBtn">🔑 Zmeniť heslo</button>
+  </div>
+
+  <!-- MODAL okno -->
+  <div id="passwordModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="closeModal">&times;</span>
+      <h3>Zmeniť heslo</h3>
+      <label>Staré heslo:</label>
+      <input type="password" id="oldPassword" placeholder="Zadaj staré heslo">
+
+      <label>Nové heslo:</label>
+      <input type="password" id="newPassword" placeholder="Zadaj nové heslo">
+
+      <label>Potvrď nové heslo:</label>
+      <input type="password" id="confirmPassword" placeholder="Zopakuj nové heslo">
+
+      <button class="post-btn" id="savePassword">Uložiť nové heslo</button>
+    </div>
+  </div>
+
+  <script>
+    const loginBtn = document.getElementById("loginBtn");
+    const nicknameInput = document.getElementById("nickname");
+    const passwordInput = document.getElementById("password");
+    const message = document.getElementById("message");
+    const body = document.body;
+    const music = document.getElementById("calmMusic");
+    const toggleBtn = document.getElementById("toggleMusic");
+    let playing = false;
+
+    const GUARDIANS = ["Strážca", "Pomocník", "Pomocník 2", "Pomocník 3"];
+    const GUARDIAN_PASSWORD = "spravedlnosť";
+
+    function loadUsers() {
+      try {
+        return JSON.parse(localStorage.getItem("users") || "{}");
+      } catch {
+        return {};
+      }
+    }
+
+    function saveUsers(users) {
+      localStorage.setItem("users", JSON.stringify(users));
+    }
+
+    loginBtn.onclick = () => {
+      const name = nicknameInput.value.trim();
+      const pass = passwordInput.value;
+
+      if (!name || !pass) {
+        message.style.color = "#cf6b85";
+        message.textContent = "Prosím, vyplň všetky polia 🌸";
+        return;
+      }
+      if (pass.length < 4 || pass.length > 16) {
+        message.style.color = "#cf6b85";
+        message.textContent = "Heslo musí mať 4 až 16 znakov 🔒";
+        return;
+      }
+
+      if (GUARDIANS.includes(name)) {
+        if (pass !== GUARDIAN_PASSWORD) {
+          message.style.color = "#cf6b85";
+          message.textContent = "Nesprávne heslo pre Strážcu / Pomocníka 🔒";
+          return;
+        }
+        localStorage.setItem("currentUser", name);
+        localStorage.setItem("nickname", name);
+        message.style.color = "#4b8370";
+        message.textContent = `Vitaj, ${name} — presmerovávam ťa do správy... 🌸`;
+        setTimeout(() => window.location.href = "guardian_dashboard.html", 900);
+        return;
+      }
+
+      const users = loadUsers();
+      if (users.hasOwnProperty(name)) {
+        if (users[name] !== pass) {
+          message.style.color = "#cf6b85";
+          message.textContent = "Nesprávne heslo — skús to znova 💗";
+          return;
+        }
+        localStorage.setItem("currentUser", name);
+        localStorage.setItem("nickname", name);
+        message.style.color = "#4b8370";
+        message.textContent = `Vitaj späť, ${name} — presmerovávam ťa... 🌿`;
+        setTimeout(() => window.location.href = "community.html", 700);
+        return;
+      }
+
+      users[name] = pass;
+      saveUsers(users);
+      localStorage.setItem("currentUser", name);
+      localStorage.setItem("nickname", name);
+      message.style.color = "#4b8370";
+      message.textContent = `Vitaj, ${name} — účet vytvorený. Presmerovávam ťa do komunity 🌸`;
+      setTimeout(() => window.location.href = "community.html", 900);
+    };
+
+    (function autoRedirectIfLogged() {
+      const cur = localStorage.getItem("currentUser");
+      if (cur) {
+        if (GUARDIANS.includes(cur)) {
+          setTimeout(() => window.location.href = "guardian_dashboard.html", 300);
+        } else {
+          setTimeout(() => window.location.href = "community.html", 300);
+        }
+      }
+    })();
+
+    // === MODAL ===
+    const modal = document.getElementById("passwordModal");
+    document.getElementById("changePasswordBtn").onclick = () => modal.style.display = "block";
+    document.getElementById("closeModal").onclick = () => modal.style.display = "none";
+    window.onclick = (e) => { if (e.target === modal) modal.style.display = "none"; };
+
+    document.getElementById("savePassword").onclick = () => {
+      const oldPass = document.getElementById("oldPassword").value.trim();
+      const newPass = document.getElementById("newPassword").value.trim();
+      const confirmPass = document.getElementById("confirmPassword").value.trim();
+
+      const currentUser = localStorage.getItem("currentUser");
+      if (!currentUser) {
+        alert("Najprv sa prihlás 🌿");
+        return;
+      }
+
+      const users = JSON.parse(localStorage.getItem("users") || "{}");
+      if (!users[currentUser] || users[currentUser] !== oldPass) {
+        alert("Staré heslo nie je správne ❌");
+        return;
+      }
+
+      if (newPass.length < 4) {
+        alert("Nové heslo musí mať aspoň 4 znaky 🔒");
+        return;
+      }
+
+      if (newPass !== confirmPass) {
+        alert("Heslá sa nezhodujú ⚠️");
+        return;
+      }
+
+      users[currentUser] = newPass;
+      localStorage.setItem("users", JSON.stringify(users));
+      alert("Heslo bolo úspešne zmenené 🌿");
+      modal.style.display = "none";
+
+      document.getElementById("oldPassword").value = "";
+      document.getElementById("newPassword").value = "";
+      document.getElementById("confirmPassword").value = "";
+    };
+  </script>
+</body>
+</html>
+

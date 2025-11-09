@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Strážca – Správa Tichého Miesta</title>
+  <style>
+    body {
+      font-family: "Nunito Sans", sans-serif;
+      background: linear-gradient(180deg, #f1f8f5, #eaf3f8);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    header {
+      background-color: #8bc8ae;
+      color: white;
+      width: 100%;
+      padding: 15px;
+      text-align: center;
+      font-size: 1.3rem;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    }
+
+    h2 {
+      margin-top: 25px;
+      color: #4b8370;
+    }
+
+    .section {
+      width: 90%;
+      max-width: 700px;
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .report {
+      border-bottom: 1px solid #eee;
+      padding: 15px 0;
+    }
+
+    .report:last-child {
+      border-bottom: none;
+    }
+
+    .report p {
+      margin: 5px 0;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 7px 15px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: background 0.2s ease;
+    }
+
+    .approve {
+      background: #a4d8ba;
+      color: #1b4436;
+    }
+    .approve:hover { background: #8bc8ae; }
+
+    .delete {
+      background: #f5b4b4;
+      color: #662626;
+    }
+    .delete:hover { background: #f09292; }
+
+    #logout {
+      background: #eee;
+      color: #555;
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      border-radius: 8px;
+      padding: 6px 14px;
+    }
+
+    .empty {
+      text-align: center;
+      color: #777;
+      font-style: italic;
+      margin-top: 15px;
+    }
+
+    footer {
+      margin: 30px 0;
+      color: #888;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <header>🛡️ Strážca – Správa Tichého Miesta</header>
+  <button id="logout">Odhlásiť sa</button>
+
+  <h2>Nahlásené príspevky</h2>
+  <div class="section" id="postReports"></div>
+
+  <h2>Nahlásené komentáre</h2>
+  <div class="section" id="commentReports"></div>
+
+  <footer>💚 Strážcovia a Pomocníci chránia Tiché Miesto 💚</footer>
+
+  <script>
+    const ALLOWED = ["Strážca", "Pomocník", "Pomocník 2", "Pomocník 3"];
+    const currentUser = localStorage.getItem("currentUser");
+
+    // Ak nie je Strážca alebo Pomocník -> späť na hlavnú stránku
+    if (!ALLOWED.includes(currentUser)) {
+      alert("Nemáš oprávnenie na prístup do tejto sekcie.");
+      window.location.href = "index.html";
+    }
+
+    const postContainer = document.getElementById("postReports");
+    const commentContainer = document.getElementById("commentReports");
+
+    // Testovacie dáta (iba ak ešte nič neexistuje)
+    if (!localStorage.getItem("postReports")) {
+      const samplePosts = [
+        { id: 1, author: "Luna", content: "Cítim sa na dne, neviem čo robiť...", reason: "nahlásené omylom" },
+        { id: 2, author: "Alex", content: "Všetci sú proti mne!", reason: "negatívny tón" }
+      ];
+      localStorage.setItem("postReports", JSON.stringify(samplePosts));
+    }
+
+    if (!localStorage.getItem("commentReports")) {
+      const sampleComments = [
+        { id: 1, author: "Marek", content: "Toto je hlúposť!", reason: "vulgarizmus" },
+        { id: 2, author: "Zoe", content: "Úplne s tebou súhlasím 💗", reason: "bez problému" }
+      ];
+      localStorage.setItem("commentReports", JSON.stringify(sampleComments));
+    }
+
+    function loadReports(key) {
+      return JSON.parse(localStorage.getItem(key) || "[]");
+    }
+
+    function saveReports(key, data) {
+      localStorage.setItem(key, JSON.stringify(data));
+    }
+
+    function renderSection(container, key) {
+      const reports = loadReports(key);
+      container.innerHTML = "";
+
+      if (reports.length === 0) {
+        container.innerHTML = `<div class="empty">Žiadne nahlásenia 🌸</div>`;
+        return;
+      }
+
+      reports.forEach((rep, index) => {
+        const div = document.createElement("div");
+        div.className = "report";
+        div.innerHTML = `
+          <p><b>Autor:</b> ${rep.author}</p>
+          <p><b>Obsah:</b> ${rep.content}</p>
+          <p><b>Dôvod nahlásenia:</b> ${rep.reason}</p>
+          <div class="buttons">
+            <button class="approve">✅ Schváliť</button>
+            <button class="delete">🗑️ Zmazať</button>
+          </div>
+        `;
+
+        const approveBtn = div.querySelector(".approve");
+        const deleteBtn = div.querySelector(".delete");
+
+        approveBtn.onclick = () => {
+          reports.splice(index, 1);
+          saveReports(key, reports);
+          renderSection(container, key);
+          alert("Obsah bol schválený a odstránený zo zoznamu 🌿");
+        };
+
+        deleteBtn.onclick = () => {
+          reports.splice(index, 1);
+          saveReports(key, reports);
+          renderSection(container, key);
+          alert("Obsah bol odstránený zo systému 🗑️");
+        };
+
+        container.appendChild(div);
+      });
+    }
+
+    // 🔧 Opravené odhlásenie – funguje spoľahlivo
+    document.getElementById("logout").onclick = () => {
+      alert("Bolo ti priané veľa pokoja 🌿 — úspešne si sa odhlásil.");
+      localStorage.removeItem("currentUser");
+      setTimeout(() => window.location.href = "index.html", 250);
+    };
+
+    renderSection(postContainer, "postReports");
+    renderSection(commentContainer, "commentReports");
+  </script>
+</body>
+</html>

@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>💌 Súkromné správy – Tiché Miesto</title>
+  <style>
+    :root{
+      --bg1: #f7f0ff; /* svetlá levanduľa */
+      --bg2: #fff7ef; /* teplá béžová */
+      --sent: #dff5ec; /* bublina odoslané (nádej) */
+      --recv: #efe6ff; /* prijaté (empatia) */
+      --muted: #7b8b84;
+      --accent: #6b9f8a;
+      --card: #ffffff;
+    }
+    html,body{height:100%;margin:0;font-family: "Nunito Sans", system-ui, sans-serif;background:linear-gradient(180deg,var(--bg1),var(--bg2));color:#213; }
+    header{background:transparent;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;}
+    header h1{margin:0;font-size:1.25rem;display:flex;align-items:center;gap:10px}
+    header .back{background:var(--card);border-radius:20px;padding:8px 12px;border:none;cursor:pointer;color:var(--accent);box-shadow:0 2px 6px rgba(0,0,0,0.06)}
+    .wrap{max-width:1100px;margin:10px auto;display:grid;grid-template-columns:320px 1fr;gap:20px;padding:10px}
+    /* left column (lists) */
+    .panel{background:var(--card);border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(31,41,35,0.06)}
+    .panel h2{margin:0 0 10px 0;font-size:1rem;color:var(--accent)}
+    .sectionTitle{font-weight:600;color:#4b6c63;margin-bottom:8px}
+    .chat-list{display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow:auto;padding-right:6px}
+    .chat-item{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;cursor:pointer;border:1px solid transparent}
+    .chat-item:hover{background:#f4fbf7}
+    .chat-thumb{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #eef7f3}
+    .chat-meta{flex:1;display:flex;flex-direction:column;min-width:0}
+    .meta-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+    .meta-top .name{font-weight:700;color:#2e5b4f;font-size:0.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .meta-top .time{font-size:0.78rem;color:var(--muted)}
+    .preview{font-size:0.88rem;color:#556a64;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .unread-badge{background:#ff6b6b;color:white;padding:3px 7px;border-radius:12px;font-size:0.75rem}
+
+    /* right column (chat window) */
+    .chatWindow{display:flex;flex-direction:column;height:75vh;background:linear-gradient(180deg,rgba(255,255,255,0.95),rgba(255,255,255,0.98));border-radius:12px;padding:12px;box-shadow:0 6px 18px rgba(31,41,35,0.06)}
+    .placeholder{flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+    .chatHeader{display:flex;align-items:center;gap:12px;border-bottom:1px solid #eef6f2;padding-bottom:8px;margin-bottom:8px}
+    .chatHeader img{width:48px;height:48px;border-radius:50%;object-fit:cover}
+    .chatHeader .who{font-weight:700;color:#2e5b4f}
+    .messages{flex:1;overflow:auto;padding:8px 6px;display:flex;flex-direction:column;gap:10px}
+    .bubble{max-width:70%;padding:10px 12px;border-radius:14px;display:flex;gap:8px;align-items:flex-end;box-shadow:0 2px 6px rgba(0,0,0,0.04)}
+    .bubble .avatar{width:34px;height:34px;border-radius:50%;object-fit:cover}
+    .bubble .text{font-size:0.95rem;color:#183;line-height:1.2}
+    .bubble .meta{font-size:0.75rem;color:var(--muted);margin-left:6px}
+    .bubble.recv{background:var(--recv);align-self:flex-start}
+    .bubble.sent{background:var(--sent);align-self:flex-end;flex-direction:row-reverse}
+    .inputRow{display:flex;gap:10px;padding:10px;border-top:1px solid #eef6f2}
+    .inputRow input{flex:1;padding:10px;border-radius:10px;border:1px solid #dfeeee;background:#fcfffd}
+    .inputRow button{background:var(--accent);color:white;border:none;padding:10px 14px;border-radius:10px;cursor:pointer}
+    .new-chat{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+    .small-note{font-size:0.9rem;color:var(--muted);margin-top:8px}
+    /* responsive */
+    @media(max-width:880px){
+      .wrap{grid-template-columns:1fr;padding:8px}
+      .chatWindow{height:60vh}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>💌 Súkromné správy</h1>
+    <button class="back" onclick="location.href='community.html'">← Späť do komunity</button>
+  </header>
+
+  <div class="wrap">
+    <!-- LEFT: nové + staré -->
+    <div class="panel">
+      <div class="new-chat">
+        <input id="startNick" placeholder="Začni nový rozhovor (prezývka)" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e6f0ea">
+        <button id="startBtn" style="padding:8px 10px;border-radius:8px;background:#fff;border:1px solid #dfeeee;cursor:pointer">🌱 Začať</button>
+      </div>
+
+      <div style="margin-bottom:14px">
+        <div class="sectionTitle">Nové správy</div>
+        <div id="newList" class="chat-list"></div>
+      </div>
+
+      <div>
+        <div class="sectionTitle">Staré správy</div>
+        <div id="oldList" class="chat-list"></div>
+      </div>
+
+      <div class="small-note">Správy sú uložené lokálne vo vašom prehliadači.</div>
+    </div>
+
+    <!-- RIGHT: chat area -->
+    <div class="chatWindow panel" id="chatPanel">
+      <div id="emptyMsg" class="placeholder">Vyber rozhovor z ľavej strany alebo začni nový 🌿</div>
+
+      <div id="chatArea" style="display:none;flex-direction:column;height:100%">
+        <div class="chatHeader" id="chatHeader">
+          <img id="chatAvatar" src="" alt="avatar">
+          <div>
+            <div class="who" id="chatName">Meno</div>
+            <div style="font-size:0.85rem;color:var(--muted)" id="chatStatus">Aktívny</div>
+          </div>
+        </div>
+
+        <div class="messages" id="messages"></div>
+
+       <div class="inputRow">
+  <label for="imgUpload" title="Priložiť obrázok" style="cursor:pointer;font-size:1.3rem">📎</label>
+  <input type="file" id="imgUpload" accept="image/*" style="display:none">
+  <input id="msgInput" placeholder="Napíš správu..." />
+  <button id="sendBtn">Odoslať</button>
+</div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ----- Utilities & storage schema -----
+    const currentUser = localStorage.getItem('currentUser');
+    if (!currentUser) {
+      alert('Najprv sa prihlás 🌿');
+      location.href = 'index.html';
+    }
+
+    // canonical chat key for two users (sorted) -> unique
+    function chatKey(a,b){
+      const arr = [String(a), String(b)].map(s=>s.trim());
+      arr.sort((x,y)=> x.localeCompare(y, 'sk'));
+      return 'chat_' + arr[0] + '__' + arr[1];
+    }
+
+    function loadUsers(){
+      try { return JSON.parse(localStorage.getItem('users')||'{}'); }
+      catch(e){ return {}; }
+    }
+
+    function loadChat(k){
+      return JSON.parse(localStorage.getItem(k) || '[]'); // array of messages {sender,text,time}
+    }
+    function saveChat(k,arr){ localStorage.setItem(k, JSON.stringify(arr)); }
+
+    // last seen per user per partner
+    function lastSeenKey(user,partner){
+      const arr = [String(user),String(partner)].map(s=>s.trim());
+      arr.sort((x,y)=> x.localeCompare(y,'sk'));
+      return 'chat_lastseen_' + arr[0] + '__' + arr[1] + '__' + String(user);
+    }
+
+    function getLastSeen(user,partner){
+      return Number(localStorage.getItem(lastSeenKey(user,partner)) || 0);
+    }
+    function setLastSeen(user,partner,ts){
+      localStorage.setItem(lastSeenKey(user,partner), String(ts));
+    }
+
+    // helper to format time
+    function fmtTime(ts){
+      const d = new Date(ts);
+      return d.toLocaleString(undefined, {hour:'2-digit',minute:'2-digit', day:'2-digit', month:'2-digit'});
+    }
+
+    // get partner from chat key
+    function partnerFromKey(key){
+      // key = chat_a__b
+      const rest = key.replace(/^chat_/,'');
+      const parts = rest.split('__');
+      if (parts.length!==2) return null;
+      return parts[0] === currentUser ? parts[1] : parts[0];
+    }
+
+    // get profile pic for user if stored under user + '_photo' or use default
+    function getProfilePic(user){
+      const p = localStorage.getItem(user + '_photo');
+      return p || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+    }
+
+    // create sample chats if none exist (only for demo/test)
+    (function ensureSamples(){
+      // if no chats for currentUser, create a couple for demo
+      const allKeys = Object.keys(localStorage);
+      const hasChat = allKeys.some(k=>k.startsWith('chat_') && k.includes(currentUser));
+      if (!hasChat){
+        // create sample with two users if they exist otherwise create users entries
+        const users = loadUsers();
+        if (!users['Luna']) users['Luna'] = 'test';
+        if (!users['Janko']) users['Janko'] = 'test';
+        localStorage.setItem('users', JSON.stringify(users));
+
+        const k1 = chatKey(currentUser, 'Luna');
+        const k2 = chatKey(currentUser, 'Janko');
+        saveChat(k1, [
+          { sender: 'Luna', text: 'Ahoj, ako sa dnes máš?', time: Date.now() - 1000*60*60*24 },
+          { sender: currentUser, text: 'Nie veľmi, ale som rád/á že si tu. Ďakujem.', time: Date.now() - 1000*60*60*23 },
+          { sender: 'Luna', text: 'Ak chceš, môžeme sa porozprávať.', time: Date.now() - 1000*60*60*22 }
+        ]);
+        saveChat(k2, [
+          { sender: 'Janko', text: 'Posielam pozdrav 🌿', time: Date.now() - 1000*60*60*10 }
+        ]);
+        // set lastSeen so that k2 is unread (Janko) and k1 maybe already seen
+        setLastSeen(currentUser, 'Luna', Date.now() - 1000*60*60*21);
+        setLastSeen(currentUser, 'Janko', 0);
+      }
+    })();
+
+    // ----- Rendering lists -----
+    const newList = document.getElementById('newList');
+    const oldList = document.getElementById('oldList');
+    const chatArea = document.getElementById('chatArea');
+    const emptyMsg = document.getElementById('emptyMsg');
+    const messagesDiv = document.getElementById('messages');
+    const chatName = document.getElementById('chatName');
+    const chatAvatar = document.getElementById('chatAvatar');
+    const chatStatus = document.getElementById('chatStatus');
+    const msgInput = document.getElementById('msgInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    function scanChats(){
+      const chats = [];
+      for (let i=0;i<localStorage.length;i++){
+        const k = localStorage.key(i);
+        if (!k.startsWith('chat_')) continue;
+        if (!k.includes('__')) continue;
+        // only include chats where currentUser is participant
+        const parts = k.replace(/^chat_/,'').split('__');
+        if (parts.includes(currentUser)){
+          const other = parts[0] === currentUser ? parts[1] : parts[0];
+          const msgs = loadChat(k);
+          const last = msgs[msgs.length-1];
+          const lastTime = last ? last.time : 0;
+          // unread if exists messages by other with time > lastSeen
+          const lastSeen = getLastSeen(currentUser, other);
+          const unreadCount = msgs.filter(m => m.sender !== currentUser && m.time > lastSeen).length;
+          chats.push({key:k,other, lastText: last?last.text:'', lastTime, unreadCount});
+        }
+      }
+      // sort by lastTime desc
+      chats.sort((a,b)=> b.lastTime - a.lastTime);
+      return chats;
+    }
+
+    function renderLists(){
+      const chats = scanChats();
+      newList.innerHTML = '';
+      oldList.innerHTML = '';
+      chats.forEach(c=>{
+        const item = document.createElement('div');
+        item.className = 'chat-item';
+        item.innerHTML = `
+          <img class="chat-thumb" src="${getProfilePic(c.other)}" alt="">
+          <div class="chat-meta">
+            <div class="meta-top">
+              <div class="name">${c.other}</div>
+              <div class="time">${c.lastTime ? new Date(c.lastTime).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : ''}</div>
+            </div>
+            <div class="preview">${c.lastText}</div>
+          </div>
+          ${c.unreadCount? `<div class="unread-badge">${c.unreadCount}</div>` : ''}
+        `;
+        item.onclick = ()=> openChat(c.other, c.key);
+        if (c.unreadCount>0) newList.appendChild(item); else oldList.appendChild(item);
+      });
+
+      if (newList.childElementCount===0) newList.innerHTML = '<div style="color:var(--muted);font-size:0.95rem">Žiadne nové správy</div>';
+      if (oldList.childElementCount===0) oldList.innerHTML = '<div style="color:var(--muted);font-size:0.95rem">Žiadne staré správy</div>';
+    }
+
+    // ----- Chat open / render -----
+    let activePartner = null;
+    let activeKey = null;
+
+    function openChat(partner, key=null){
+      activePartner = partner;
+      activeKey = key || chatKey(currentUser, partner);
+      // render header
+      chatName.textContent = partner;
+      chatAvatar.src = getProfilePic(partner);
+      chatStatus.textContent = 'Súkromný rozhovor';
+      // render messages
+      renderChatMessages();
+      // show area
+      emptyMsg.style.display = 'none';
+      chatArea.style.display = 'flex';
+      // mark as seen now
+      setLastSeen(currentUser, partner, Date.now());
+      renderLists();
+    }
+
+    function renderChatMessages(){
+      messagesDiv.innerHTML = '';
+      const msgs = loadChat(activeKey);
+      if (!msgs || msgs.length===0){
+        messagesDiv.innerHTML = '<div style="color:var(--muted);padding:10px">Žiadne správy zatiaľ — povedz ahoj 🌿</div>';
+        return;
+      }
+      msgs.forEach(m=>{
+       const div = document.createElement('div');
+const isMe = m.sender === currentUser;
+div.className = 'bubble ' + (isMe? 'sent' : 'recv');
+
+let content = '';
+if (m.text) {
+  content = `<div class="text"><strong style="font-weight:700;color:#2e5b4f">${m.sender}</strong><br>${escapeHtml(m.text)}</div>`;
+} else if (m.image) {
+  content = `
+    <div class="text">
+      <strong style="font-weight:700;color:#2e5b4f">${m.sender}</strong><br>
+      <img src="${m.image}" alt="obrázok" style="max-width:200px;border-radius:10px;cursor:pointer;margin-top:6px" onclick="window.open(this.src)">
+    </div>`;
+}
+
+div.innerHTML = `
+  <img class="avatar" src="${getProfilePic(m.sender)}" alt="">
+  <div style="display:flex;flex-direction:column;align-items:${isMe? 'flex-end':'flex-start'}">
+    ${content}
+    <div class="meta">${fmtTime(m.time)}</div>
+  </div>
+`;
+
+    
+        messagesDiv.appendChild(div);
+      });
+      // scroll to bottom
+      messagesDiv.scrollTop = messagesDiv.scrollHeight + 200;
+    }
+
+    // send message
+    sendBtn.onclick = sendMessage;
+    msgInput.addEventListener('keydown', (e)=> { if (e.key==='Enter') sendMessage(); });
+
+    function sendMessage(){
+      const txt = msgInput.value.trim();
+      if (!txt || !activePartner) return;
+      const k = activeKey || chatKey(currentUser, activePartner);
+      const arr = loadChat(k);
+      const msg = { sender: currentUser, text: txt, time: Date.now() };
+      arr.push(msg);
+      saveChat(k, arr);
+      // do NOT update lastSeen for other - they will have unread
+      setLastSeen(currentUser, activePartner, Date.now()); // mark as seen for me
+      msgInput.value = '';
+      renderChatMessages();
+      renderLists();
+    }
+
+    // ----- Obrázky v správach -----
+const imgUpload = document.getElementById('imgUpload');
+
+imgUpload.addEventListener('change', async function() {
+  const file = this.files[0];
+  if (!file) return;
+  if (!activePartner) {
+    alert("Najprv vyber komu chceš poslať správu 🌿");
+    this.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const imgData = e.target.result;
+    const k = activeKey || chatKey(currentUser, activePartner);
+    const arr = loadChat(k);
+    arr.push({
+      sender: currentUser,
+      image: imgData,
+      time: Date.now()
+    });
+    saveChat(k, arr);
+    setLastSeen(currentUser, activePartner, Date.now());
+    renderChatMessages();
+    renderLists();
+  };
+  reader.readAsDataURL(file);
+  this.value = ''; // reset input
+});
+
+
+    // start new chat button
+    document.getElementById('startBtn').onclick = () => {
+      const nick = document.getElementById('startNick').value.trim();
+      if (!nick) return alert('Zadaj prezývku používateľa');
+      if (nick === currentUser) return alert('Sám sa sebe nedá písať 🙂');
+      const users = loadUsers();
+      if (!users[nick]) {
+        if (!confirm('Používateľ s touto prezývkou nie je registrovaný. Napriek tomu chceš začať chat?')) return;
+      }
+      const k = chatKey(currentUser, nick);
+      if (!localStorage.getItem(k)) saveChat(k, []); // create empty chat
+      openChat(nick, k);
+      document.getElementById('startNick').value = '';
+    };
+
+    // escape html in text
+    function escapeHtml(s){
+      return s.replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]); });
+    }
+
+    // initial render
+    renderLists();
+
+    // if activeChat preselected via localStorage (e.g., clicking from community)
+    const pre = localStorage.getItem('activeChat');
+    if (pre) {
+      // clear it after use
+      localStorage.removeItem('activeChat');
+      // if chat exists, open
+      const users = loadUsers();
+      if (pre !== currentUser) {
+        const key = chatKey(currentUser, pre);
+        if (!localStorage.getItem(key)) saveChat(key, []);
+        openChat(pre, key);
+      }
+    }
+
+
+    // Automatické rolovanie na poslednú správu
+function scrollToBottom() {
+  const chatBox = document.getElementById("chatBox");
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// Po načítaní starých správ
+window.onload = () => {
+  renderOldMessages();
+  scrollToBottom();
+};
+
+// Keď používateľ odošle novú správu
+document.getElementById("sendBtn").onclick = () => {
+  const msgText = document.getElementById("messageInput").value.trim();
+  const imgFile = document.getElementById("imageUpload").files[0];
+  const currentUser = localStorage.getItem("currentUser");
+
+  if (!msgText && !imgFile) return;
+
+  const reader = new FileReader();
+  reader.onload = function () {
+    const imgData = imgFile ? reader.result : null;
+    addMessage(currentUser, msgText, imgData);
+    scrollToBottom(); // <-- tu sa chat automaticky posunie dolu
+  };
+
+  if (imgFile) reader.readAsDataURL(imgFile);
+  else {
+    addMessage(currentUser, msgText, null);
+    scrollToBottom();
+  }
+};
+
+  </script>
+</body>
+</html>

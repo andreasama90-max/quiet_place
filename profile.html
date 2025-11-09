@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Môj profil – Tiché Miesto</title>
+  <style>
+    body {
+      font-family: "Nunito Sans", sans-serif;
+      background: linear-gradient(180deg, #f3f9f7, #e8f1f9);
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #8bc8ae;
+      color: white;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 25px;
+    }
+
+    .title {
+      font-size: 1.4rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    nav {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .nav-btn {
+      background: #f7fff9;
+      color: #3e6e5d;
+      border: none;
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      white-space: nowrap;
+    }
+
+    .nav-btn:hover {
+      background: #e1f4ea;
+      transform: scale(1.03);
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 30px auto;
+      background: white;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .profile-info {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .profile-pic {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #8bc8ae;
+    }
+
+    .change-photo {
+      color: #3e6e5d;
+      cursor: pointer;
+      font-size: 0.9rem;
+      text-decoration: underline;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-family: inherit;
+      margin-top: 8px;
+    }
+
+    .post {
+      background: #fdfdfd;
+      border-radius: 10px;
+      padding: 15px;
+      margin-top: 20px;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.08);
+    }
+
+    .action-btn {
+      background: none;
+      color: #6b8f80;
+      font-size: 0.9rem;
+      border: none;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+
+    .action-btn:hover {
+      text-decoration: underline;
+    }
+
+    /* Modal pre zmenu hesla */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 20;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-content {
+      background: white;
+      margin: 10% auto;
+      padding: 20px 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      max-width: 400px;
+      text-align: left;
+    }
+
+    .modal-content h3 {
+      text-align: center;
+      color: #3e6e5d;
+      margin-bottom: 15px;
+    }
+
+    .modal-content input {
+      width: 100%;
+      padding: 8px 10px;
+      margin-bottom: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-family: inherit;
+    }
+
+    .close {
+      float: right;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #888;
+    }
+
+    .close:hover {
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="topbar">
+      <span class="title">🌿 Môj profil</span>
+      <nav>
+        <button class="nav-btn" onclick="window.location.href='community.html'">🏡 Späť do komunity</button>
+        <button class="nav-btn" id="changePasswordBtn">🔑 Zmeniť heslo</button>
+        <button class="nav-btn" id="logout">💻 Odhlásiť sa</button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="profile-info">
+      <img id="profilePic" class="profile-pic" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Profilová fotka">
+      <div>
+        <input type="file" id="photoUpload" accept="image/*" style="display:none;">
+        <span class="change-photo" onclick="document.getElementById('photoUpload').click()">Zmeniť fotku</span>
+        <div style="margin-top:10px;">
+          <label for="nickname">Prezývka:</label>
+          <input type="text" id="nickname" readonly>
+        </div>
+      </div>
+    </div>
+
+    <h3>Moje príspevky 🌸</h3>
+    <div id="myPostsContainer"></div>
+  </div>
+
+  <!-- MODAL: Zmeniť heslo -->
+  <div id="passwordModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="closeModal">&times;</span>
+      <h3>Zmeniť heslo</h3>
+      <label>Staré heslo:</label>
+      <input type="password" id="oldPassword" placeholder="Zadaj staré heslo">
+
+      <label>Nové heslo:</label>
+      <input type="password" id="newPassword" placeholder="Zadaj nové heslo">
+
+      <label>Potvrď nové heslo:</label>
+      <input type="password" id="confirmPassword" placeholder="Zopakuj nové heslo">
+
+      <button class="nav-btn" id="savePassword">💾 Uložiť nové heslo</button>
+    </div>
+  </div>
+
+  <script>
+    const currentUser = localStorage.getItem("currentUser");
+    if (!currentUser) {
+      alert("Najprv sa prihlás 🌿");
+      window.location.href = "index.html";
+    }
+
+    const nicknameInput = document.getElementById("nickname");
+    const profilePic = document.getElementById("profilePic");
+    const postsContainer = document.getElementById("myPostsContainer");
+
+    // načítaj uložené meno a fotku
+    nicknameInput.value = currentUser;
+    const savedPhoto = localStorage.getItem(currentUser + "_photo");
+    if (savedPhoto) profilePic.src = savedPhoto;
+
+    // zmena fotky
+    document.getElementById("photoUpload").addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        profilePic.src = reader.result;
+        localStorage.setItem(currentUser + "_photo", reader.result);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // zmena prezývky (len raz)
+    nicknameInput.addEventListener("dblclick", () => {
+      if (nicknameInput.readOnly) {
+        const newName = prompt("Zadaj nové meno (zmena sa dá urobiť len raz):");
+        if (newName && newName.trim() !== "") {
+          const users = JSON.parse(localStorage.getItem("users") || "{}");
+          if (users[newName]) {
+            alert("Toto meno je už obsadené ❌");
+            return;
+          }
+          users[newName] = users[currentUser];
+          delete users[currentUser];
+          localStorage.setItem("users", JSON.stringify(users));
+          localStorage.setItem("currentUser", newName);
+          localStorage.setItem("nickname", newName);
+          nicknameInput.value = newName;
+          nicknameInput.readOnly = true;
+          alert("Meno bolo zmenené 🌿");
+        }
+      }
+    });
+
+    // zobraz vlastné príspevky
+    const allPosts = JSON.parse(localStorage.getItem("posts") || "[]");
+    const myPosts = allPosts.filter(p => p.author === currentUser);
+
+    function renderMyPosts() {
+      postsContainer.innerHTML = "";
+      myPosts.forEach((p, i) => {
+        const div = document.createElement("div");
+        div.className = "post";
+        div.innerHTML = `
+          <p><b>${p.author}</b></p>
+          <p>${p.text}</p>
+          ${p.media ? (p.mediaType === "image"
+            ? `<img src="${p.media}" style="max-width:100%; border-radius:8px;">`
+            : `<video controls style="max-width:100%; border-radius:8px;"><source src="${p.media}" type="video/mp4"></video>`) : ""}
+          <div>
+            <button class="action-btn" onclick="editPost(${i})">✏️ Upraviť</button>
+            <button class="action-btn" onclick="deletePost(${i})">🗑️ Zmazať</button>
+          </div>
+        `;
+        postsContainer.appendChild(div);
+      });
+    }
+
+    window.editPost = (i) => {
+      const newText = prompt("Uprav svoj príspevok:", myPosts[i].text);
+      if (newText !== null) {
+        myPosts[i].text = newText;
+        const indexInAll = allPosts.findIndex(p => p.author === currentUser && p.text === myPosts[i].text);
+        allPosts[indexInAll] = myPosts[i];
+        localStorage.setItem("posts", JSON.stringify(allPosts));
+        renderMyPosts();
+      }
+    };
+
+    window.deletePost = (i) => {
+      if (confirm("Naozaj chceš zmazať tento príspevok?")) {
+        const globalIndex = allPosts.findIndex(p => p.author === myPosts[i].author && p.text === myPosts[i].text);
+        if (globalIndex !== -1) allPosts.splice(globalIndex, 1);
+        myPosts.splice(i, 1);
+        localStorage.setItem("posts", JSON.stringify(allPosts));
+        renderMyPosts();
+      }
+    };
+
+    renderMyPosts();
+
+    // modal pre zmenu hesla
+    const modal = document.getElementById("passwordModal");
+    document.getElementById("changePasswordBtn").onclick = () => modal.style.display = "block";
+    document.getElementById("closeModal").onclick = () => modal.style.display = "none";
+    window.onclick = (e) => { if (e.target === modal) modal.style.display = "none"; };
+
+    document.getElementById("savePassword").onclick = () => {
+      const oldPass = document.getElementById("oldPassword").value.trim();
+      const newPass = document.getElementById("newPassword").value.trim();
+      const confirmPass = document.getElementById("confirmPassword").value.trim();
+      const users = JSON.parse(localStorage.getItem("users") || "{}");
+
+      if (!users[currentUser] || users[currentUser] !== oldPass) {
+        alert("Staré heslo nie je správne ❌");
+        return;
+      }
+
+      if (newPass.length < 4) {
+        alert("Nové heslo musí mať aspoň 4 znaky 🔒");
+        return;
+      }
+
+      if (newPass !== confirmPass) {
+        alert("Heslá sa nezhodujú ⚠️");
+        return;
+      }
+
+      users[currentUser] = newPass;
+      localStorage.setItem("users", JSON.stringify(users));
+      alert("Heslo bolo úspešne zmenené 🌿");
+      modal.style.display = "none";
+    };
+
+    // odhlásenie
+    document.getElementById("logout").onclick = () => {
+      alert("Bolo ti priané veľa pokoja 🌿 — úspešne si sa odhlásil.");
+      localStorage.removeItem("currentUser");
+      setTimeout(() => window.location.href = "index.html", 250);
+    };
+  </script>
+</body>
+</html>

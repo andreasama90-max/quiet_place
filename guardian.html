@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prihlásenie – Strážca | Tiché Miesto</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Nunito Sans', sans-serif;
+      background: linear-gradient(180deg, #f1f8f6, #e3f0ed);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    .box {
+      background: rgba(255,255,255,0.9);
+      padding: 30px 40px;
+      border-radius: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      text-align: center;
+      max-width: 320px;
+      width: 100%;
+    }
+    h1 {
+      color: #4b8370;
+      margin-bottom: 10px;
+    }
+    p {
+      color: #555;
+      font-size: 0.95rem;
+      margin-bottom: 20px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #bcd5ca;
+      margin-bottom: 10px;
+      text-align: center;
+      outline: none;
+    }
+    button {
+      background: #8bc8ae;
+      border: none;
+      padding: 10px 20px;
+      color: white;
+      font-size: 1rem;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background: #78b59a;
+    }
+    #message {
+      color: #c9656a;
+      margin-top: 10px;
+      font-size: 0.9rem;
+    }
+    .back {
+      margin-top: 15px;
+      font-size: 0.9rem;
+    }
+    .back a {
+      color: #4b8370;
+      text-decoration: none;
+    }
+    .back a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="box">
+    <h1>🛡️ Strážca</h1>
+    <p>Len pre Strážcu a Pomocníkov.<br>Heslo: <em>spravedlnosť</em></p>
+    
+    <input type="text" id="guardianName" placeholder="Meno (Strážca / Pomocník 1–3)">
+    <input type="password" id="guardianPass" placeholder="Heslo">
+    <button id="loginGuardian">Prihlásiť sa</button>
+    
+    <p id="message"></p>
+    <div class="back"><a href="index.html">← Späť na hlavnú stránku</a></div>
+  </div>
+
+  <script>
+    const loginGuardian = document.getElementById("loginGuardian");
+    const guardianName = document.getElementById("guardianName");
+    const guardianPass = document.getElementById("guardianPass");
+    const message = document.getElementById("message");
+
+    const allowedGuardians = ["Strážca", "Pomocník", "Pomocník 2", "Pomocník 3"];
+    const correctPassword = "spravedlnosť";
+
+    loginGuardian.onclick = () => {
+      const name = guardianName.value.trim();
+      const pass = guardianPass.value.trim();
+
+      if (!name || !pass) {
+        message.textContent = "Prosím, vyplň všetky polia 🌿";
+        return;
+      }
+
+      if (!allowedGuardians.includes(name)) {
+        message.textContent = "Toto meno nemá oprávnenie vstúpiť 🚫";
+        return;
+      }
+
+      if (pass !== correctPassword) {
+        message.textContent = "Nesprávne heslo 🔒";
+        return;
+      }
+
+      message.style.color = "#4b8370";
+      message.textContent = "Vitaj, " + name + " 🌸 Máš prístup do správy Tichého Miesta.";
+
+      // po 2 sekundách presmeruje na admin stránku (zatiaľ neexistuje)
+      setTimeout(() => {
+        window.location.href = "guardian_dashboard.html";
+      }, 2000);
+    };
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tiché Miesto – Súkromné správy</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Nunito Sans", sans-serif;
+      background: linear-gradient(180deg, #f4faf7, #ffffff);
+      color: #333;
+    }
+
+    header {
+      background: #a6d6c3;
+      color: white;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.3rem;
+    }
+
+    header button {
+      background: white;
+      color: #4b8370;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 15px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    header button:hover {
+      background: #eaf7f3;
+    }
+
+    main {
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 10px;
+    }
+
+    .chat-select {
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      padding: 20px;
+      text-align: center;
+    }
+
+    select, input {
+      padding: 8px;
+      border: 1px solid #bcd5ca;
+      border-radius: 8px;
+      margin-top: 10px;
+      width: 80%;
+    }
+
+    button {
+      background: #8bc8ae;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 20px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: #77b69c;
+    }
+
+    .chat-window {
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      padding: 15px;
+      height: 400px;
+      overflow-y: auto;
+      margin-top: 15px;
+    }
+
+    .message {
+      margin: 10px 0;
+      padding: 8px 12px;
+      border-radius: 10px;
+      display: inline-block;
+      max-width: 80%;
+    }
+
+    .mine {
+      background: #dff5ec;
+      color: #2b5d4a;
+      float: right;
+      clear: both;
+    }
+
+    .theirs {
+      background: #f2f7f5;
+      color: #333;
+      float: left;
+      clear: both;
+    }
+
+    .chat-input {
+      display: flex;
+      margin-top: 10px;
+      gap: 10px;
+    }
+
+    .chat-input input {
+      flex-grow: 1;
+      padding: 8px;
+      border: 1px solid #cde1d7;
+      border-radius: 10px;
+    }
+
+    .footer {
+      text-align: center;
+      color: #888;
+      padding: 15px;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>💬 Tiché Miesto – Súkromné správy</h1>
+    <button onclick="goBack()">← Späť</button>
+  </header>
+
+  <main>
+    <div id="selectBox" class="chat-select">
+      <h2>Vyber, s kým si chceš písať 🌿</h2>
+      <input type="text" id="receiver" placeholder="Zadaj prezývku používateľa">
+      <button onclick="startChat()">Začať chat</button>
+    </div>
+
+    <div id="chatBox" style="display:none;">
+      <h2 id="chatWith">Chat</h2>
+      <div class="chat-window" id="chatWindow"></div>
+      <div class="chat-input">
+        <input type="text" id="messageInput" placeholder="Napíš správu...">
+        <button onclick="sendMessage()">Odoslať</button>
+      </div>
+    </div>
+  </main>
+
+  <div class="footer">Všetky správy ostávajú len v tvojom zariadení 💗</div>
+
+  <script>
+    const currentUser = localStorage.getItem("nickname") || "Anonym";
+    let activeChatUser = null;
+
+    function startChat() {
+      const receiver = document.getElementById("receiver").value.trim();
+      if (!receiver || receiver === currentUser) {
+        alert("Zadaj platnú prezývku (nie svoju).");
+        return;
+      }
+
+      activeChatUser = receiver;
+      document.getElementById("chatWith").textContent = `Rozhovor s ${receiver}`;
+      document.getElementById("selectBox").style.display = "none";
+      document.getElementById("chatBox").style.display = "block";
+
+      loadMessages();
+    }
+
+    function loadMessages() {
+      const chatKey = `chat_${currentUser}_${activeChatUser}`;
+      const reverseKey = `chat_${activeChatUser}_${currentUser}`;
+      const allMessages = JSON.parse(localStorage.getItem(chatKey) || localStorage.getItem(reverseKey) || "[]");
+
+      const chatWindow = document.getElementById("chatWindow");
+      chatWindow.innerHTML = "";
+      allMessages.forEach(msg => {
+        const div = document.createElement("div");
+        div.className = `message ${msg.sender === currentUser ? "mine" : "theirs"}`;
+        div.textContent = msg.text;
+        chatWindow.appendChild(div);
+      });
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    function sendMessage() {
+      const input = document.getElementById("messageInput");
+      const text = input.value.trim();
+      if (!text) return;
+
+      const chatKey = `chat_${currentUser}_${activeChatUser}`;
+      const reverseKey = `chat_${activeChatUser}_${currentUser}`;
+
+      const allMessages = JSON.parse(localStorage.getItem(chatKey) || localStorage.getItem(reverseKey) || "[]");
+      allMessages.push({ sender: currentUser, text, time: new Date().toLocaleTimeString() });
+      localStorage.setItem(chatKey, JSON.stringify(allMessages));
+
+      input.value = "";
+      loadMessages();
+    }
+
+    function goBack() {
+      window.location.href = "community.html";
+    }
+  </script>
+</body>
+</html>
